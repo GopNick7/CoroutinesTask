@@ -1,4 +1,4 @@
-package com.nekitapp.coroutinestask
+package com.nekitapp.coroutinestask.data.net.model
 
 import com.google.gson.annotations.SerializedName
 

@@ -1,6 +1,7 @@
-package com.nekitapp.coroutinestask
+package com.nekitapp.coroutinestask.data.net
 
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
+import com.nekitapp.coroutinestask.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

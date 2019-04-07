@@ -1,5 +1,6 @@
-package com.nekitapp.coroutinestask
+package com.nekitapp.coroutinestask.data.net
 
+import com.nekitapp.coroutinestask.data.net.model.VideoModel
 import kotlinx.coroutines.Deferred
 import retrofit2.http.GET
 import retrofit2.http.Query
