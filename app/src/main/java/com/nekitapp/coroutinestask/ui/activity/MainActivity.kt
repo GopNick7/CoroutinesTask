@@ -10,17 +10,14 @@ import com.nekitapp.coroutinestask.data.net.model.VideoModel
 import com.nekitapp.coroutinestask.ui.adapter.MainAdapter
 import com.nekitapp.coroutinestask.utils.extensions.visible
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CoroutineScope {
 
+    override val coroutineContext =
+        Job() + Dispatchers.IO + CoroutineExceptionHandler { _, throwable -> Log.e(TAG, "Caught $throwable") }
     private val mainAdapter: MainAdapter by lazy { MainAdapter() }
     private val linearLayoutManager: LinearLayoutManager by lazy { LinearLayoutManager(this) }
-    private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
-        Log.e(TAG, "Caught $exception")
-    }
 
     private val TAG = MainActivity::class.java.simpleName
     private val PAGE_1 = 1
@@ -29,15 +26,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        initAdapter()
 
-        // Enable in main thread
-        inNeedEnableProgressBar(true)
+        MainScope().launch {
+            // Enable in main thread
+            inNeedEnableProgressBar(true)
+        }
 
-        GlobalScope.launch(exceptionHandler) {
-            // get async responses in Dispatchers.Unconfined
+        launch {
             getResponses(
-                getVideo(PAGE_1),
-                getVideo(PAGE_2)
+                async { getVideo(PAGE_1) },
+                async { getVideo(PAGE_2) }
             )
         }
     }
@@ -57,15 +56,13 @@ class MainActivity : AppCompatActivity() {
         return NetManager.restApi.getAllVideoAsync(offset).await()
     }
 
-    private fun getResponses(vararg responses: VideoModel) {
-        GlobalScope.launch(exceptionHandler) {
-            // Disable progress in main thread
-            inNeedEnableProgressBar(false)
-        }
-        initAdapter()
-
-        val internalDataList = responses.map { it.globalData.video.internalDataList }.flatten()
+    private suspend fun getResponses(vararg responses: Deferred<VideoModel>) {
+        val internalDataList = responses.map { it.await().globalData.video.internalDataList }.flatten()
         mainAdapter.showAllItems(internalDataList)
 
+        MainScope().launch {
+            // Enable in main thread
+            inNeedEnableProgressBar(false)
+        }
     }
 }
