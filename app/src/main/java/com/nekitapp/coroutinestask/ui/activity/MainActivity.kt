@@ -13,10 +13,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 
 /**
- * API to use:
-https://app.swaggerhub.com/apis/AnnKrepchenko/SR_mobile/1.0.3#/video/get_api_mobile_video_get_all
-
-
+ *
 1. get 2 pages in parallel
 2. display recieved data on UI
 3. handle progress
