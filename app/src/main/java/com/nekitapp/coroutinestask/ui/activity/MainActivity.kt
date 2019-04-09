@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
+import com.nekitapp.coroutinestask.Exeptions.MyException
+import com.nekitapp.coroutinestask.Exeptions.MyIOException
 import com.nekitapp.coroutinestask.R
 import com.nekitapp.coroutinestask.data.net.NetManager
 import com.nekitapp.coroutinestask.data.net.model.VideoModel
@@ -11,6 +13,7 @@ import com.nekitapp.coroutinestask.ui.adapter.MainAdapter
 import com.nekitapp.coroutinestask.utils.extensions.visible
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
+import java.io.IOException
 
 /**
  *
@@ -28,15 +31,30 @@ import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
 
-    override val coroutineContext =
-        Job() + Dispatchers.IO + CoroutineExceptionHandler { _, throwable -> Log.e(TAG, "Caught $throwable") }
-
     private val mainAdapter: MainAdapter by lazy { MainAdapter() }
     private val linearLayoutManager: LinearLayoutManager by lazy { LinearLayoutManager(this) }
 
     private val TAG = MainActivity::class.java.simpleName
     private val PAGE_1 = 1
     private val PAGE_2 = 2
+
+    override val coroutineContext =
+        Job() + Dispatchers.IO + CoroutineExceptionHandler { _, throwable ->
+            try {
+                when (throwable) {
+                    IOException() -> {
+                        throw MyIOException()
+                    }
+                    Exception() -> {
+                        throw MyException()
+                    }
+                }
+            } catch (ex: java.lang.Exception) {
+                Log.e(TAG, "Caught $ex")
+            }
+            Log.e(TAG, "Caught $throwable")
+        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,11 +95,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun inNeedEnableProgressBar(isNeedEnable: Boolean) {
-        launch {
-            withContext(Dispatchers.Main) {
-                pb_main.visible(isNeedEnable)
-            }
-        }
+        pb_main.visible(isNeedEnable)
     }
 
     override fun onDestroy() {
