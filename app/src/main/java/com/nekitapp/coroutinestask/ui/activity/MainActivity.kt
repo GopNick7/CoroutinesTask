@@ -12,6 +12,23 @@ import com.nekitapp.coroutinestask.utils.extensions.visible
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
 
+/**
+ * API to use:
+https://app.swaggerhub.com/apis/AnnKrepchenko/SR_mobile/1.0.3#/video/get_api_mobile_video_get_all
+
+
+1. get 2 pages in parallel
+2. display recieved data on UI
+3. handle progress
+4. handle erros
+5. map errors to in app Exceptions
+5. do not use retrofit.Response
+6. display thumbnails  on UI
+7. use suspend functions to wrap data conversion
+8. handle component's lifecycle
+
+ */
+
 class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override val coroutineContext =
