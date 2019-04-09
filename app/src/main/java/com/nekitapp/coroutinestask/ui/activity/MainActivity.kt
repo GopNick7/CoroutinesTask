@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override val coroutineContext =
         Job() + Dispatchers.IO + CoroutineExceptionHandler { _, throwable -> Log.e(TAG, "Caught $throwable") }
+
     private val mainAdapter: MainAdapter by lazy { MainAdapter() }
     private val linearLayoutManager: LinearLayoutManager by lazy { LinearLayoutManager(this) }
 
@@ -28,12 +29,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         setContentView(R.layout.activity_main)
         initAdapter()
 
-        MainScope().launch {
-            // Enable in main thread
-            inNeedEnableProgressBar(true)
-        }
+        inNeedEnableProgressBar(true)
 
         launch {
+            // async request(parallel)
             getResponses(
                 async { getVideo(PAGE_1) },
                 async { getVideo(PAGE_2) }
@@ -48,21 +47,32 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-    private fun inNeedEnableProgressBar(isNeedEnable: Boolean) {
-        pb_main.visible(isNeedEnable)
-    }
-
     private suspend fun getVideo(offset: Int): VideoModel {
         return NetManager.restApi.getAllVideoAsync(offset).await()
     }
 
     private suspend fun getResponses(vararg responses: Deferred<VideoModel>) {
+        // it.await - combine responses
         val internalDataList = responses.map { it.await().globalData.video.internalDataList }.flatten()
-        mainAdapter.showAllItems(internalDataList)
 
-        MainScope().launch {
-            // Enable in main thread
+        //switch from IO pool to main thread
+        withContext(Dispatchers.Main) {
+            mainAdapter.showAllItems(internalDataList)
             inNeedEnableProgressBar(false)
         }
+    }
+
+    private fun inNeedEnableProgressBar(isNeedEnable: Boolean) {
+        launch {
+            withContext(Dispatchers.Main) {
+                pb_main.visible(isNeedEnable)
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        //release job
+        coroutineContext.cancel()
     }
 }
